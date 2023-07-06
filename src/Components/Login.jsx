@@ -1,8 +1,13 @@
 import React,{useState} from 'react'
 import { Radio,Button, Space,Input } from 'antd';
 import {Link, useNavigate} from 'react-router-dom'
+import { useDispatch } from 'react-redux';
+import { addAuthentication } from '../Features/AuthSlice';
+import { checkUser } from '../Services/authenticateUser.service';
+import { addUserDetails } from '../Features/UserSlice';
 const Login = () => {
   const navigate=useNavigate();
+  const dispatch=useDispatch();
   const options = [
     { label: 'Admin', value: 'Admin' },
     { label: 'User', value: 'User' },
@@ -12,7 +17,6 @@ const Login = () => {
   const[password,setPassword]=useState('');
   const [value3, setValue3] = useState('Admin');
   const[credential,setCredential]=useState(false);
-  const[authenticated,setAuthenticated]=useState('');
   const onChange3 = ({ target: { value } }) => {
     console.log('radio3 checked', value);
     setValue3(value);
@@ -25,26 +29,43 @@ const Login = () => {
     setCredential(false);
     setPassword(e.target.value);
   }
-  const clickHandler=()=>{
+  const clickHandler=async(e)=>{
       if(name===""||password===""){
         setCredential(true);
       }
-      if (localStorage.getItem('formData')) {
-        const login = JSON.parse(localStorage.getItem('formData'))
-        let fetchData=login?.filter((item)=>{
-          return item.name===name;
-        })
-        if(fetchData.length>0){
-        if (fetchData.length && fetchData[0].name ===name && fetchData[0].password===password && fetchData[0].value3===value3) {
-          navigate("/home",{state:fetchData})
-        } else {
-          setAuthenticated("Credentials Invalid");
+    //   if (localStorage.getItem('formData')) {
+    //     const login = JSON.parse(localStorage.getItem('formData'))
+    //     let fetchData=login?.filter((item)=>{
+    //       return item.name===name;
+    //     })
+    //     if(fetchData.length>0){
+    //     if (fetchData.length && fetchData[0].name ===name && fetchData[0].password===password && fetchData[0].value3===value3) {
+    //       navigate("/home",{state:fetchData})
+    //     } else {
+    //       setAuthenticated("Credentials Invalid");
+    //     }
+    //    }
+    //     else {
+    //         alert("Please Register First");
+    //     }
+    // }
+    e.preventDefault();
+     try{
+        const data= await checkUser(name,password,value3);
+        console.log("data",data)
+        if(data.status===200){
+          dispatch(addUserDetails({name,password,value3}))
+          dispatch(addAuthentication(data.data._id));
+        navigate("/home");
         }
-       }
-        else {
-            alert("Please Register First");
-        }
-    }
+        if(data.status===204){
+            alert("User not found")
+          }
+     }
+     catch(err){
+        console.log(err)
+        alert(err.response.data)
+     }
   }
   return (
     <>
@@ -70,7 +91,7 @@ const Login = () => {
             <br/><br/>
             <Link to="/">Not a Registered User?</Link>
             <br/><br/>
-            <span style={{height:20,color:'red'}}>{authenticated}</span><br/><br/>
+            {/* <span style={{height:20,color:'red'}}>{authenticated}</span><br/><br/> */}
             <Space wrap>
             <Button type="primary" id="primary" onClick={(e)=>clickHandler(e)}>Login</Button>
             </Space>

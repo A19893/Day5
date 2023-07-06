@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { getProducts } from "../Services/getProduct.service";
 const User = () => {
     const [list, setList] = useState(null);
     useEffect(() => {
-        const data = JSON.parse(localStorage.getItem("productData"));
-        setList(data);
+        const fetchProducts = async () => {
+            const ProductList = await getProducts();
+            console.log(ProductList);
+            setList(ProductList.data);
+          };
+          fetchProducts();
     }, []);
     const addHandler = (idx) => {
         let userData = JSON.parse(localStorage.getItem('userData')) || [];
@@ -18,9 +23,9 @@ const User = () => {
                     return (
                         <>
                             <div className='specificProd'>
-                                Product ID-{item.prodId}<br />
-                                Prod Name-{item.prodName}<br />
-                                Prod Description-{item.prodDesc}<br />
+                                Product ID-{item.id}<br />
+                                Prod Name-{item.name}<br />
+                                Prod Description-{item.description}<br />
                                 <button type="submit" style={{ width: "100px", backgroundColor: 'blue', borderRadius: "25px", color: 'white' }} onClick={e => addHandler(idx)}>Add to Cart</button>
                             </div>
                         </>

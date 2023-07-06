@@ -1,7 +1,12 @@
 import React,{useState} from 'react'
 import { Radio,Button, Space,Input } from 'antd';
 import {Link,useNavigate} from 'react-router-dom'
+import { useDispatch } from 'react-redux';
+import { addUserDetails } from '../Features/UserSlice';
+import { addAuthentication } from '../Features/AuthSlice';
+import { addUser } from '../Services/addUser.service';
 const Signup = () => {
+  const dispatch=useDispatch();
   const navigate=useNavigate();
   const options = [
     { label: 'Admin', value: 'Admin' },
@@ -24,19 +29,32 @@ const Signup = () => {
     setCredential(false);
     setPassword(e.target.value);
   }
-  const clickHandler=()=>{
+  const clickHandler=async(e)=>{
+    // e.preventDefault();
     if(name===""||password===""){
       setCredential(true);
     }
-    let formData=JSON.parse(localStorage.getItem('formData'))||[];
-    formData.push({name,password,value3})
-    localStorage.setItem('formData',JSON.stringify(formData));
-    let userData=JSON.parse(localStorage.getItem('formData'));
-     let specificData=userData.filter((item)=>{
-      return item.name===name;
-     })
-     console.log(specificData);
-    navigate("/home",{state:specificData});
+    // let formData=JSON.parse(localStorage.getItem('formData'))||[];
+    // formData.push({name,password,value3})
+    // localStorage.setItem('formData',JSON.stringify(formData));
+    // let userData=JSON.parse(localStorage.getItem('formData'));
+    //  let specificData=userData.filter((item)=>{
+    //   return item.name===name;
+    //  })
+    dispatch(addUserDetails({name,password,value3}));
+    try{
+      const role=value3;
+      const res=await addUser(name,password,role)
+      console.log(res)
+      if(res.status===200){
+        dispatch(addAuthentication(res.data.insertedId));
+        navigate("/home")
+      }
+    }
+    catch(err){
+      console.log(err)
+       alert(err.response.data)
+    }
   }
   return (
     <>
